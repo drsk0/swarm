@@ -1,0 +1,55 @@
+cabal-version:       >=1.10
+name:                swarm
+version:             0.1.0.0
+-- synopsis:
+description:         The swarm database server.
+license:             MIT
+license-file:        LICENSE
+author:              drsk
+maintainer:          drsk
+build-type:          Simple
+
+executable swarm
+  main-is:            Main.hs
+  other-modules:      Auth.Google, Auth.Common, Firebase.CloudMessaging
+  hs-source-dirs:     src
+  build-depends:       base
+                       , acid-state
+                       , aeson
+                       , binary
+                       , binary-instances
+                       , bytestring
+                       , case-insensitive
+                       , containers
+                       , cryptonite
+                       , cryptostore
+                       , extra
+                       , http-conduit
+                       , http-types
+                       , jose-jwt
+                       , monad-control
+                       , morpheus-graphql
+                       , morpheus-graphql-app
+                       , morpheus-graphql-subscriptions
+                       , mtl
+                       , pem
+                       , safe
+                       , safecopy
+                       , snap-core
+                       , snap-server
+                       , suspend
+                       , lifted-base
+                       , temporary
+                       , text
+                       , time
+                       , timers
+                       , unliftio-core
+                       , unordered-containers
+                       , utf8-string
+                       , wai-websockets
+                       , websockets
+                       , websockets-snap
+                       , word8
+                       , x509
+                       , x509-store
+  default-language:    Haskell2010

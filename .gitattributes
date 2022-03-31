@@ -1,0 +1,3 @@
+secrets/** filter=git-crypt diff=git-crypt
+ui/android/key.properties filter=git-crypt diff=git-crypt
+deployment/.lego/** filter=git-crypt diff=git-crypt

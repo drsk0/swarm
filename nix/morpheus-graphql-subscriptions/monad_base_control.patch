@@ -1,0 +1,146 @@
+diff --git a/morpheus-graphql-subscriptions.cabal b/morpheus-graphql-subscriptions.cabal
+index cc6046a..9919d99 100644
+--- a/morpheus-graphql-subscriptions.cabal
++++ b/morpheus-graphql-subscriptions.cabal
+@@ -55,6 +55,8 @@ library
+     , unordered-containers >=0.2.8.0 && <0.3
+     , uuid >=1.0 && <=1.4
+     , websockets >=0.11.0 && <=1.0
++    , monad-control
++    , lifted-base
+   default-language: Haskell2010
+
+ test-suite morpheus-subscription-test
+
+diff --git a/src/Data/Morpheus/Subscriptions.hs b/src/Data/Morpheus/Subscriptions.hs
+index c459c37..53b5cce 100644
+--- a/src/Data/Morpheus/Subscriptions.hs
++++ b/src/Data/Morpheus/Subscriptions.hs
+@@ -21,8 +21,8 @@ module Data.Morpheus.Subscriptions
+   )
+ where
+ 
+-import Control.Monad.IO.Unlift
+-  ( MonadUnliftIO,
++import Control.Monad.Trans.Control
++  ( MonadBaseControl,
+   )
+ import Data.Morpheus.App
+   ( App,
+@@ -63,7 +63,7 @@ httpPubApp = runPubApp
+ 
+ -- | Wai WebSocket Server App for GraphQL subscriptions
+ webSocketsApp ::
+-  ( MonadUnliftIO m,
++  ( MonadBaseControl IO m,
+     MonadIO m,
+     SubApp ServerApp e
+   ) =>
+@@ -72,7 +72,7 @@ webSocketsApp ::
+ webSocketsApp = runSubApp
+ 
+ class SubApp app e where
+-  runSubApp :: (MonadIO m, MonadUnliftIO m) => App e m -> m (app, e -> m ())
++  runSubApp :: (MonadIO m, MonadBaseControl IO m) => App e m -> m (app, e -> m ())
+ 
+ class PubApp e where
+   runPubApp :: (MonadIO m, MapAPI a b) => [e -> m ()] -> App e m -> a -> m b
+diff --git a/src/Data/Morpheus/Subscriptions/Internal.hs b/src/Data/Morpheus/Subscriptions/Internal.hs
+index 2f7f60a..0ca1d23 100644
+--- a/src/Data/Morpheus/Subscriptions/Internal.hs
++++ b/src/Data/Morpheus/Subscriptions/Internal.hs
+@@ -38,10 +38,9 @@ where
+ import Control.Concurrent
+   ( modifyMVar_,
+   )
+-import Control.Exception (finally)
+-import Control.Monad.IO.Unlift
+-  ( MonadUnliftIO,
+-    withRunInIO,
++import Control.Exception.Lifted (finally)
++import Control.Monad.Trans.Control
++  ( MonadBaseControl,
+   )
+ -- MORPHEUS
+ 
+@@ -124,11 +123,9 @@ initDefaultStore = do
+         writeStore = \changes -> liftIO $ modifyMVar_ store (return . changes)
+       }
+ 
+-finallyM :: MonadUnliftIO m => m () -> m () -> m ()
+-finallyM loop end = withRunInIO $ \runIO -> finally (runIO loop) (runIO end)
+-
+ connectionThread ::
+-  ( MonadUnliftIO m,
++  ( MonadBaseControl IO m,
++    MonadIO m,
+     Eq ch,
+     Hashable ch
+   ) =>
+@@ -137,7 +134,7 @@ connectionThread ::
+   m ()
+ connectionThread api scope = do
+   input <- connect
+-  finallyM
++  finally
+     (connectionLoop api scope input)
+     (disconnect scope input)
+ 
+diff --git a/src/Data/Morpheus/Subscriptions/WebSockets.hs b/src/Data/Morpheus/Subscriptions/WebSockets.hs
+index c0c218b..4239576 100644
+--- a/src/Data/Morpheus/Subscriptions/WebSockets.hs
++++ b/src/Data/Morpheus/Subscriptions/WebSockets.hs
+@@ -15,9 +15,9 @@ module Data.Morpheus.Subscriptions.WebSockets
+   )
+ where
+ 
+-import Control.Monad.IO.Unlift
+-  ( MonadUnliftIO,
+-    withRunInIO,
++import Control.Monad.Trans.Control
++  ( MonadBaseControl,
++    embed_
+   )
+ import Data.Morpheus.Subscriptions.Internal
+   ( ApiContext (..),
+@@ -34,15 +34,6 @@ import Network.WebSockets
+ import qualified Network.WebSockets as WS
+ import Relude
+ 
+--- support old version of Websockets
+-pingThread :: Connection -> IO () -> IO ()
+-
+-#if MIN_VERSION_websockets(0,12,6)
+-pingThread connection = WS.withPingThread connection 30 (return ())
+-#else
+-pingThread connection = (WS.forkPingThread connection 30 >>)
+-#endif
+-
+ defaultWSScope :: MonadIO m => Store e m -> Connection -> ApiContext SUB e m
+ defaultWSScope Store {writeStore} connection =
+   SubContext
+@@ -52,16 +43,12 @@ defaultWSScope Store {writeStore} connection =
+     }
+ 
+ webSocketsWrapper ::
+-  (MonadUnliftIO m, MonadIO m) =>
++  (MonadBaseControl IO m, MonadIO m) =>
+   Store e m ->
+   (ApiContext SUB e m -> m ()) ->
+   m ServerApp
+ webSocketsWrapper store handler =
+-  withRunInIO $
+-    \runIO ->
+-      pure $
+-        \pending -> do
+-          conn <- acceptApolloRequest pending
+-          pingThread
+-            conn
+-            $ runIO (handler (defaultWSScope store conn))
++  embed_ $
++    \pending -> do
++      conn <- liftIO $ acceptApolloRequest pending
++      handler (defaultWSScope store conn)
+-- 
+2.30.0
+

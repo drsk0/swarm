@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "449991501895",
+    "firebase_url": "https://swarm-90059.firebaseio.com",
+    "project_id": "swarm-90059",
+    "storage_bucket": "swarm-90059.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:449991501895:android:1086618353136c6e6fa962",
+        "android_client_info": {
+          "package_name": "com.swarmapp.swarm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "449991501895-b8bfb2742dbcblsgdgifr90sbo5pdg2j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swarmapp.swarm",
+            "certificate_hash": "75f2f0fea289c06a41fdcf83ffc2493ddacbbc01"
+          }
+        },
+        {
+          "client_id": "449991501895-rmvhfttqfqdc7aldgkfq1m69cijkldfq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swarmapp.swarm",
+            "certificate_hash": "474dd003459d53b350e1fdf22b7d60ac98f5ce8b"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxBDItoTn3q_PNCCB_j-I9Fmv_qjxtxPA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
