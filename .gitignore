@@ -1,0 +1,10 @@
+/.daml
+dist-newstyle
+result
+log/*
+state/*
+src/state/*
+src/db/*
+src/service-account.json
+.direnv/*
+result-doc
